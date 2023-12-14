@@ -1,8 +1,14 @@
-import { Secret } from './../../../../node_modules/@types/jsonwebtoken/index.d';
+import { Secret } from 'jsonwebtoken';
 import authConfig from '@config/auth';
 import AppError from "@shared/errors/AppError";
 import { NextFunction, Response, Request } from "express";
 import { verify } from "jsonwebtoken";
+
+interface ITokenPayload {
+  iat: number;
+  exp: number;
+  sub: string;
+}
 
 export default function isAuthenticated(request: Request, response: Response, next: NextFunction): void {
   const authHeader = request.headers.authorization;
@@ -15,6 +21,12 @@ export default function isAuthenticated(request: Request, response: Response, ne
 
   try {
     const decodeToken = verify(token, authConfig.jwt.secret);
+
+    const { sub } = decodeToken as ITokenPayload;
+
+    request.user = {
+        id: sub
+    }
 
     return next();
   } catch (err) {
